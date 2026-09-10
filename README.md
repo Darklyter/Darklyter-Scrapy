@@ -1,5 +1,10 @@
 # tpdb scraper framework
 
+> Since Darklyter is a pain in Dirtyracer's ass, this repo is a copy of what he is
+> currently running as his Scrapy deployment. He's old school and doesn't go in for
+> any of that Poetry nonsense. The actual "Official" TPDB Scrapy repo is located at
+> https://github.com/ThePornDatabase/scrapy
+
 The base classes, pipelines and helpers for building Scrapy spiders that submit
 scenes, movies and performers to a ThePornDB-style API. This repository holds the
 framework only. Spiders live in `tpdb/spiders/`, which ships empty.
