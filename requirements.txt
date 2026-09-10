@@ -1,0 +1,50 @@
+# Core crawling
+scrapy
+scrapy-fake-useragent
+scrapy-playwright
+scrapy-impersonate
+spidermon
+
+# HTTP
+httpx
+requests
+urllib3
+w3lib
+
+# Parsing and extraction
+parsel
+lxml
+dpath
+chompjs
+extruct
+furl
+tldextract
+beautifulsoup4
+
+# Data handling
+dateparser
+python-dateutil
+python-slugify
+unidecode
+humanize
+clean-text
+deep-translator
+schematics
+
+# Images and OCR
+Pillow
+pytesseract
+
+# Storage
+psycopg2-binary
+pymongo
+
+# Misc runtime
+backoff
+tqdm
+stashapp-tools
+
+# Development
+pycodestyle
+autopep8
+yapf

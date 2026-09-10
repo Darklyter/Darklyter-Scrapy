@@ -1,0 +1,13 @@
+# Copy to database_tpdb.ini and fill in.  database_tpdb.ini is gitignored.
+#
+# This is the Postgres cache the movie pipeline uses to avoid resubmitting movies
+# that are already known.  It is read by tpdb/helpers/dbhelper.py.
+#
+# Only the movie path touches it.  Scene and performer scrapes never connect, so
+# leaving this unconfigured is fine if you do not scrape movies.
+
+[postgresql]
+host =
+database =
+user =
+password =

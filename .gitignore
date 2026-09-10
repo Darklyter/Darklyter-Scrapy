@@ -1,0 +1,81 @@
+# Local configuration.  These hold API keys, database passwords and local paths.
+# Copy the matching .example file and edit, never commit the real one.
+tpdb/settings.py
+tpdb/credentials.ini
+tpdb/database.ini
+tpdb/database_tpdb.ini
+credentials.ini
+database.ini
+
+# Scraper output and local caches
+jsonexport/
+jsonfiles/
+dupefiles/
+downloads/
+httpcache/
+.scrapy
+*.log
+scrape_status.tmp
+tpdb/datafiles/*.sqlite
+tpdb/datafiles/*_session.json
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Editor and OS noise
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.bak
+*.old
+*.orig
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/

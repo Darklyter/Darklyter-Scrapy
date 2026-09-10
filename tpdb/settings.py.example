@@ -1,0 +1,209 @@
+# Scrapy settings for the tpdb scraper framework.
+#
+# Copy this file to settings.py and fill in the values marked CHANGE ME.
+# settings.py is gitignored, because it holds API keys and local paths.
+#
+#     https://docs.scrapy.org/en/latest/topics/settings.html
+#     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
+#     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+
+#   Custom CLI Options:
+#
+#   --loglevel=(DEBUG, INFO, WARNING, ERROR, CRITICAL) (loglevel = INFO by default)
+#   -a limit_pages=####  (Number of pages to stop after, limit_pages=all for no limit)
+#   -s display=true (Display a single line per entry scraped, DEBUG level will display entire Item object)
+#   -s export=true (Export to JsonLinesItemExporter file, each line is its own JSON structure.  Good for memory with large datasets)
+#   -s file=<filename> (works with '-s export' to set the filename.  Defaults to "<SpiderName><YYYYMMDD-HHMM>.json")
+#   -s path=<path> (works with '-s export' to set the file path.  Defaults to whatever "DEFAULT_EXPORT_PATH" is set to in this file)
+#   -s days=### (Filters results to only return results within the past ### days.  Without flag will return all results found on page)
+#   -s local=true (Scrape and display, but never POST to the API.  Use this while testing.)
+#   -s force_update=true -s force_fields=image,title (Both are required together; force_update alone does nothing.)
+import asyncio
+
+BOT_NAME = 'tpdb'
+
+# Add your own spider packages here.  Every package listed is walked recursively,
+# so subdirectories need an __init__.py to be discovered.
+SPIDER_MODULES = ['tpdb.spiders']
+NEWSPIDER_MODULE = 'tpdb.spiders'
+
+# Crawl responsibly by identifying yourself (and your website) on the
+# user-agent
+FAKEUSERAGENT_PROVIDERS = [
+    'scrapy_fake_useragent.providers.FakeUserAgentProvider',  # this is the first provider we'll try
+    'scrapy_fake_useragent.providers.FakerProvider',  # if FakeUserAgentProvider fails, we'll use faker to generate a user-agent string for us
+    'scrapy_fake_useragent.providers.FixedUserAgentProvider',  # fall back to USER_AGENT value
+]
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.62'
+
+# Obey robots.txt rules
+ROBOTSTXT_OBEY = False
+
+# ~ DOWNLOAD_DELAY = 0
+# ~ DOWNLOAD_TIMEOUT = 30
+# ~ RANDOMIZE_DOWNLOAD_DELAY = True
+
+# WindowsSelectorEventLoopPolicy exists only on Windows, where scrapy-playwright
+# needs the Selector loop because Twisted cannot use the default Proactor loop.
+# On Linux the default loop is already correct, so this must be guarded.
+import sys as _sys
+if _sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+REACTOR_THREADPOOL_MAXSIZE = 500
+CONCURRENT_ITEMS = 100
+CONCURRENT_REQUESTS = 24
+CONCURRENT_REQUESTS_PER_DOMAIN = 8
+# ~ CONCURRENT_REQUESTS_PER_IP = 8
+
+# Disable cookies (enabled by default)
+COOKIES_ENABLED = True
+# COOKIES_DEBUG = True
+# Disable Telnet Console (enabled by default)
+# ~ TELNETCONSOLE_ENABLED = True
+# ~ TELNETCONSOLE_PORT = [6023, 6073]
+
+# Override the default request headers:
+# DEFAULT_REQUEST_HEADERS = {
+#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+#   'Accept-Language': 'en',
+# }
+
+# Enable or disable spider middlewares
+# See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+# ~ SPIDER_MIDDLEWARES = {
+    # 'tpdb.middlewares.TpdbSpiderMiddleware': 543,
+# ~ }
+
+# Enable or disable downloader middlewares
+# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
+DOWNLOADER_MIDDLEWARES = {
+    # scrapy_fake_useragent 1.4.4 (unmaintained since 2022) is incompatible with
+    # current Scrapy: its RetryUserAgentMiddleware calls self.EXCEPTIONS_TO_RETRY and a
+    # 3-argument _retry(), both removed upstream, so any download exception crashed
+    # inside the retry path instead of retrying.  Scrapy's own UserAgent and Retry
+    # middlewares are used instead; USER_AGENT above supplies the header.
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
+    'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 101,
+    'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 100,
+#    'tpdb.custommiddlewares.CustomProxyMiddleware': 350,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 400,
+    # 'tpdb.middlewares.TpdbDownloaderMiddleware': 543,
+}
+
+# Enable or disable extensions
+# See https://docs.scrapy.org/en/latest/topics/extensions.html
+EXTENSIONS = {
+    'spidermon.contrib.scrapy.extensions.Spidermon': 500,
+}
+
+# Configure item pipelines
+# See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+# The base scraper classes each swap in their own pipeline (scene, movie or
+# performer), so this is only the default for a spider that sets none.
+ITEM_PIPELINES = {
+    'tpdb.pipelines.TpdbApiScenePipeline': 400,
+    'spidermon.contrib.scrapy.pipelines.ItemValidationPipeline': 800,
+}
+
+#
+# SpiderMon Entries
+#
+SPIDERMON_ENABLED = False
+# CHANGE ME if you want run summaries posted to Discord.
+SPIDERMON_DISCORD_WEBHOOK_URL = ''
+SPIDERMON_DISCORD_MESSAGE = '''
+{%- if not data.stats.local_run -%}
+	{{ "🎉"}}{{- "\n" -}}Spider "`{{ data.spider.name }}`" finished{{- "\n" -}}
+		{{- "\t" -}}_ - Runtime: {{data.stats.elapsed_time_seconds}}sec_{{- "\n" -}}
+	{%- if data.stats.item_scraped_count -%}
+		{{- "\t" -}}- Items: {{data.stats.item_scraped_count}}{{- "\n" -}}
+	{% else %}
+		{{- "\t" -}}- Items: _No Items Found in Time Period ({{data.spider.days}} days)_{{- "\n" -}}
+	{% endif %}
+	{%- if data.stats.submit_good -%}
+		{{- "\t" -}}- Submit Success: {{data.stats.submit_good}}{{- "\n" -}}
+	{% endif %}
+	{%- if data.stats.submit_bad -%}
+		{{- "\t" -}}- Submit Errors: {{data.stats.submit_bad}}{{- "\n" -}}
+	{% endif %}
+	{{- "\t" -}}_Running on Local Scrapy Node_
+{% endif %}
+'''
+SPIDERMON_SPIDER_CLOSE_MONITORS = (
+    'tpdb.monitors.SpiderCloseMonitorSuite',
+)
+
+SPIDERMON_VALIDATION_MODELS = (
+    'tpdb.validators.SceneItem',
+)
+
+AUTOTHROTTLE_ENABLED = False
+AUTOTHROTTLE_START_DELAY = 5
+AUTOTHROTTLE_MAX_DELAY = 60
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
+AUTOTHROTTLE_DEBUG = False
+
+# Enable and configure HTTP caching (disabled by default)
+# See
+# https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
+HTTPCACHE_ENABLED = False
+COMPRESSION_ENABLED = True
+HTTPCACHE_EXPIRATION_SECS = 7200
+HTTPCACHE_DIR = 'httpcache'
+# HTTPCACHE_IGNORE_HTTP_CODES = []
+HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+# Scrapy already defaults to the asyncio reactor; the pipelines await their API
+# calls, so do not switch this to a non-asyncio reactor.
+# TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
+# DUPEFILTER_DEBUG = True
+
+LOG_LEVEL = 'INFO'
+DEFAULT_EXPORT_PATH = "./jsonexport"
+PUPPETEER_SERVICE_URL = 'http://127.0.0.1:3000'
+
+# ~ DOWNLOADER_CLIENT_TLS_METHOD = 'TLSv1.2'
+REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
+DOWNLOADER_CLIENT_TLS_CIPHERS = 'DEFAULT:!DH'
+
+# CHANGE ME if you run FlareSolverr or an HTTP proxy.  Leave as-is otherwise;
+# USE_PROXY below is what actually turns the proxy on.
+FLARE_ADDRESS = 'http://127.0.0.1:8191/v1'
+FLARE_URL = 'http://127.0.0.1:8191'
+FLARE_API = 'http://127.0.0.1:8191'
+PROXY_ADDRESS = 'http://127.0.0.1:8118'
+USE_PROXY = False
+
+RETRY_HTTP_CODES = [500, 502, 503, 504, 522, 524, 408, 429, 403, 302]
+
+# MongoDB is used only as a "already scraped" cache and is off by default.
+ENABLE_MONGODB = False
+MONGODB_URL = ''
+
+# CHANGE ME.  Without an API key every run behaves as though -s local=true was
+# passed: items are scraped and displayed but never submitted.
+TPDB_API_KEY = ''
+TPDB_TEST_API_KEY = ''
+
+DAYS = 20
+WAYBACK_MACHINE_TIME_RANGE = (20100101001119, 20200105001119)
+
+# Tag alias file, relative to the directory you run scrapy from.
+FILTER_TAGS = True
+FILTER_TAG_FILENAME = 'stashtags.json'
+
+DISPLAY_ITEMS = True
+EXPORT_ITEMS = True
+
+# CHANGE ME.  Only used by file-downloading spiders.
+FILES_STORE = "./downloads/"
+CHECK_PATHS = ['./downloads/']
+DUPEFILE_PATH = 'dupefiles/dupelist-'
+
+# CHANGE ME if you run a local TPDB or StashDB instance.  These are only used by
+# the -s localdump and -s stashdump paths in the scene pipeline.
+LOCAL_TPDB_URL = 'http://127.0.0.1:8000/scenes'
+LOCAL_STASHDB_URL = 'http://127.0.0.1:8000/stashscenes'
+LOCAL_TPDB_MOVIE_URL = 'http://api.tpdb.test/movies'
+LOCAL_TPDB_PERFORMER_URL = 'http://api.tpdb.test/performer_sites'
